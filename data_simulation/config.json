@@ -1,0 +1,34 @@
+{
+    "path":{
+        "speech_scp": "",
+        "noise_scp": "",
+        "rir_scp": "",
+        "dst_dir": "/data1/MODEL/baseline/output"
+    },
+    "noise":{
+        "p_noise": 0.9,
+        "snr_min": -5,
+        "snr_max": 20
+    },
+    "voice":{
+        "p_voice": 0.1,
+        "voice_snr_min": 0,
+        "voice_snr_max": 10
+    },
+    "reverb":{
+        "p_reverb": 0.5,
+        "reverb_time": 1.5,
+        "reverb_fadeout": 0.5, 
+        "p_post_reverb": 0.25
+    },
+    "clipping":{
+        "p_clipping": 0.25,
+        "min_quantile": 0.06,
+        "max_quantile": 0.9
+    },
+    "bandwidth_limitation":{
+        "p_bandwidth_limitation": 0.5,
+        "bandwidth_limitation_rates": [2000,4000, 8000, 16000, 24000, 32000],
+        "bandwidth_limitation_methods": ["kaiser_best", "kaiser_fast", "scipy", "polyphase"]
+    }
+}

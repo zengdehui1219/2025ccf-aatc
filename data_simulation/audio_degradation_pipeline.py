@@ -15,6 +15,8 @@ import os
 
 import io
 
+import json5
+
 def framing(
     x,
     frame_length: int = 512,
@@ -296,7 +298,7 @@ def process_from_audio_path(
     to_seperate_vocal_paths=None,
     fs=None,
     force_1ch=True,
-    degradation_config=default_degradation_config,
+    config=default_degradation_config,
     length=None,
     clean_audio=None,
     reverb_v3=False,
@@ -320,29 +322,29 @@ def process_from_audio_path(
         # like add noise, using "voice_snr_min" and "voice_snr_max" to control the SNR
         for to_seperate_vocal_path in to_seperate_vocal_paths:
             to_seperate_vocal, _ = read_audio(to_seperate_vocal_path, force_1ch=force_1ch, fs=fs)
-            snr = random.uniform(degradation_config["voice_snr_min"], degradation_config["voice_snr_max"])
+            snr = random.uniform(config['voice']["voice_snr_min"], config['voice']["voice_snr_max"])
             noisy_vocal, _ = add_noise(noisy_vocal, to_seperate_vocal, snr=snr, rng=np.random.default_rng())
 
     # add reverb
-    if rir_path is not None and random.random() < degradation_config["p_reverb"]:
+    if rir_path is not None and random.random() < config['reverb']["p_reverb"]:
         # print('add reverb')
         rir_sample = read_audio(rir_path, force_1ch=force_1ch, fs=fs)[0]
         noisy_vocal, vocal = reverb_func(vocal, noisy_vocal, rir_sample, fs)
 
-    if random.random() < degradation_config["p_clipping"]:
+    if random.random() < config['clipping']["p_clipping"]:
         # 0.06 - 0.9
         noisy_vocal = clipping(noisy_vocal)
 
-    if random.random() < degradation_config["p_bandwidth_limitation"]:
+    if random.random() < config['bandwidth_limitation']["p_bandwidth_limitation"]:
         # print('add bandwidth limitation')
-        fs_new = random.choice(degradation_config["bandwidth_limitation_rates"])
-        res_type = random.choice(degradation_config["bandwidth_limitation_methods"])
+        fs_new = random.choice(config['bandwidth_limitation']["bandwidth_limitation_rates"])
+        res_type = random.choice(config['bandwidth_limitation']["bandwidth_limitation_methods"])
         noisy_vocal = bandwidth_limitation(noisy_vocal, fs=fs, fs_new=fs_new, res_type=res_type)
 
     # add noise
-    if random.random() < degradation_config["p_noise"]:
+    if random.random() < config['noise']["p_noise"]:
         # print('add noise')
-        snr = random.uniform(degradation_config["snr_min"], degradation_config["snr_max"])
+        snr = random.uniform( config['noise']["snr_min"],  config['noise']["snr_max"])
         noisy_vocal, noise_sample = add_noise(noisy_vocal, noise, snr=snr, rng=np.random.default_rng())
 
     # normalization
@@ -370,7 +372,7 @@ def read_scp(path):
     with open(path, 'r') as f:
         return [line.strip() for line in f if line.strip()]
 
-def process_single_item(speech_path, noise_list, rir_list, degradation_config, dst_dir, sr):
+def process_single_item(speech_path, noise_list, rir_list, config, dst_dir, sr):
     try:
         noise_path = random.choice(noise_list)
         rir_path = random.choice(rir_list)
@@ -382,7 +384,7 @@ def process_single_item(speech_path, noise_list, rir_list, degradation_config, d
             rir_path=rir_path,
             fs=fs,
             force_1ch=True,
-            degradation_config=degradation_config,
+            config=config,
             clean_audio=audio,
         )
 
@@ -397,32 +399,22 @@ def process_single_item(speech_path, noise_list, rir_list, degradation_config, d
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate clean/noisy speech pairs for training.")
-    parser.add_argument("--speech_scp", type=str, required=True, help="Path to the scp file for clean speeches.")
-    parser.add_argument("--noise_scp", type=str, required=True, help="Path to the scp file for noises.")
-    parser.add_argument("--rir_scp", type=str, required=True, help="Path to the scp file for room impulse responses (RIRs).")
-    parser.add_argument("--dst_dir", type=str, required=True, help="Destination directory to save 'clean' and 'noisy' subfolders.")
+    parser.add_argument("--json_config", type=str, default='')
     parser.add_argument("--num_workers", type=int, default=8, help="Number of parallel worker threads.")
     parser.add_argument("--sr", type=int, default=44100, help="Target sample rate for all audio.")
     
     args = parser.parse_args()
 
-    degradation_config = {
-        "p_noise": 0.9, "snr_min": -5, "snr_max": 20,
-        "voice_snr_min": 0, "voice_snr_max": 10,
-        "p_reverb": 0.5, "reverb_time": 1.5, "reverb_fadeout": 0.5, "p_post_reverb": 0.25,
-        "p_clipping": 0.25,
-        "p_bandwidth_limitation": 0.5,
-        "bandwidth_limitation_rates": [4000, 8000, 16000, 24000, 32000],
-        "bandwidth_limitation_methods": ["kaiser_best", "kaiser_fast", "scipy", "polyphase"],
-    }
+    with open(args.json_config,'r') as f:
+        config = json5.load(f)
     
-    os.makedirs(args.dst_dir, exist_ok=True)
-    os.makedirs(os.path.join(args.dst_dir, 'clean'), exist_ok=True)
-    os.makedirs(os.path.join(args.dst_dir, 'noisy'), exist_ok=True)
+    os.makedirs(config['path']['dst_dir'], exist_ok=True)
+    os.makedirs(os.path.join(config['path']['dst_dir'], 'clean'), exist_ok=True)
+    os.makedirs(os.path.join(config['path']['dst_dir'], 'noisy'), exist_ok=True)
 
-    speech_list = read_scp(args.speech_scp)
-    noise_list = read_scp(args.noise_scp)
-    rir_list = read_scp(args.rir_scp)
+    speech_list = read_scp(config['path']['speech_scp'])
+    noise_list = read_scp(config['path']['noise_scp'])
+    rir_list = read_scp(config['path']['rir_scp'])
     
     print(f'Found {len(speech_list)} speech files.')
     print(f'Found {len(noise_list)} noise files.')
@@ -435,8 +427,8 @@ def main():
                 speech_path, 
                 noise_list, 
                 rir_list, 
-                degradation_config, 
-                args.dst_dir, 
+                config, 
+                config['path']['dst_dir'], 
                 args.sr
             ) 
             for speech_path in speech_list
