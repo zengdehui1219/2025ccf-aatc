@@ -4,6 +4,7 @@ import sys
 import librosa
 import numpy as np
 import scipy
+import scipy.signal as signal
 import soundfile as sf
 import random
 from tqdm.contrib.concurrent import process_map
@@ -156,6 +157,12 @@ def add_noise(speech_sample, noise_sample, snr=5.0, rng=None):
     
     return noisy_speech, noise
 
+def add_freq_distortion(speech_sample):
+    EPS=1e-8
+    b = np.array([1.,np.random.uniform(low=-3/8., high=0.+EPS, size=(1))[0]])
+    a = np.array([1.,np.random.uniform(low=0., high=EPS+3/8, size=(1))[0]])
+    noisy_speech = signal.filtfilt(b,a,speech_sample)
+    return noisy_speech
 
 def add_reverberation(speech_sample, rir_sample):
     """Mix the speech sample with an additive noise sample at a given SNR.
@@ -255,42 +262,6 @@ def save_audio(audio, filename, fs):
         audio = audio[0] if audio.shape[0] == 1 else audio.T
     sf.write(filename, audio, samplerate=fs)
 
-default_degradation_config = {
-    # add noise
-    "p_noise": 0.9,
-    "snr_min": -5,
-    "snr_max": 20,
-    # add voice snr
-    "voice_snr_min": 0,
-    "voice_snr_max": 10,
-    # add reverb
-    "p_reverb": 0.5,
-    "reverb_time": 1.5,
-    "reverb_fadeout": 0.5,
-    "p_post_reverb": 0.25,
-    # add clipping
-    "p_clipping": 0.25,
-    # "clipping_min_db": -20,
-    # "clipping_max_db": 0,
-    # apply bandwidth limitation
-    "p_bandwidth_limitation": 0.5,
-    "bandwidth_limitation_rates": [
-        2000,
-        4000,
-        8000,
-        16000,
-        22050,
-        24000,
-        32000
-    ],
-    "bandwidth_limitation_methods": [
-        "kaiser_best",
-        "kaiser_fast",
-        "scipy",
-        "polyphase",
-    ],
-}
-
 def process_from_audio_path(
     noise_path,
     vocal_path=None,
@@ -298,7 +269,7 @@ def process_from_audio_path(
     to_seperate_vocal_paths=None,
     fs=None,
     force_1ch=True,
-    config=default_degradation_config,
+    config=None,
     length=None,
     clean_audio=None,
     reverb_v3=False,

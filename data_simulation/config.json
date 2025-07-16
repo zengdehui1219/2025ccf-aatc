@@ -30,5 +30,8 @@
         "p_bandwidth_limitation": 0.5,
         "bandwidth_limitation_rates": [2000,4000, 8000, 16000, 24000, 32000],
         "bandwidth_limitation_methods": ["kaiser_best", "kaiser_fast", "scipy", "polyphase"]
+    },
+    "freq_distortion":{
+        "p_freq_distortion": 0.2
     }
 }
