@@ -1,0 +1,8 @@
+{
+    "dataset":{
+        "sr": 44100,
+        "batch_size": 64,
+        "num_workers": 16,
+        "seq_len": 133120
+    }
+}
