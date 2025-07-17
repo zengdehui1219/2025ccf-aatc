@@ -332,7 +332,7 @@ def process_from_audio_path(
             snr = random.uniform(5,  config['noise']["snr_max"] // 2)
         else:
             snr = random.uniform(config['noise']["snr_max"] // 2,  config['noise']["snr_max"])
-        noisy_vocal, noise_sample = add_noise(noisy_vocal, noise, snr=snr, rng=np.random.default_rng())
+        noisy_vocal, _ = add_noise(noisy_vocal, noise, snr=snr, rng=np.random.default_rng())
 
     # normalization
     scale = 1 / max(
