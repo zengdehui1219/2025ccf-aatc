@@ -1,8 +1,8 @@
 {
     "path":{
-        "speech_scp": "",
-        "noise_scp": "",
-        "rir_scp": "",
+        "speech_scp": "./scp/speech.scp",
+        "noise_scp": "./scp/noise.scp",
+        "rir_scp": "./scp/rir.scp",
         "dst_dir": "/data1/MODEL/baseline/output"
     },
     "noise":{
