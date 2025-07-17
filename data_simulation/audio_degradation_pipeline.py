@@ -18,6 +18,13 @@ import io
 
 import json5
 
+def is_invalid_audio(audio):
+    return (
+        np.isnan(audio).any() or
+        np.isinf(audio).any() or
+        np.all(audio == 0)
+    )
+
 def framing(
     x,
     frame_length: int = 512,
@@ -296,6 +303,9 @@ def process_from_audio_path(
             snr = random.uniform(config['voice']["voice_snr_min"], config['voice']["voice_snr_max"])
             noisy_vocal, _ = add_noise(noisy_vocal, to_seperate_vocal, snr=snr, rng=np.random.default_rng())
 
+    if random.random() < config['freq_distortion']["p_freq_distortion"]:
+        noisy_vocal = add_freq_distortion(noisy_vocal)
+
     # add reverb
     if rir_path is not None and random.random() < config['reverb']["p_reverb"]:
         # print('add reverb')
@@ -315,7 +325,13 @@ def process_from_audio_path(
     # add noise
     if random.random() < config['noise']["p_noise"]:
         # print('add noise')
-        snr = random.uniform( config['noise']["snr_min"],  config['noise']["snr_max"])
+        snr_strength = random.choices(['low','medium','high'], weights=config['noise']['snr_strength_prob'])
+        if snr_strength == 'low':
+            snr = random.uniform(config['noise']["snr_min"],  5)
+        elif snr_strength == 'medium':
+            snr = random.uniform(5,  config['noise']["snr_max"] // 2)
+        else:
+            snr = random.uniform(config['noise']["snr_max"] // 2,  config['noise']["snr_max"])
         noisy_vocal, noise_sample = add_noise(noisy_vocal, noise, snr=snr, rng=np.random.default_rng())
 
     # normalization
@@ -359,7 +375,12 @@ def process_single_item(speech_path, noise_list, rir_list, config, dst_dir, sr):
             clean_audio=audio,
         )
 
+        if is_invalid_audio(clean_sample):
+            raise ValueError("clean_sample contains NaN, Inf, or is all zeros")
+        if is_invalid_audio(noisy_speech):
+            raise ValueError("noisy_speech contains NaN, Inf, or is all zeros")
         filename = os.path.basename(speech_path)
+        
         save_audio(clean_sample, os.path.join(dst_dir, "clean", filename), fs)
         save_audio(noisy_speech, os.path.join(dst_dir, "noisy", filename), fs)
         
