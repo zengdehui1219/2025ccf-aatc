@@ -11,6 +11,7 @@ from tqdm.contrib.concurrent import process_map
 import torchaudio
 import pedalboard as pd
 from pedalboard import Pedalboard, HighShelfFilter
+from mp3_degradation_pipeline import simulate_and_align_random_codec
 import math
 import os
 
@@ -334,6 +335,9 @@ def process_from_audio_path(
             snr = random.uniform(config['noise']["snr_max"] // 2,  config['noise']["snr_max"])
         noisy_vocal, _ = add_noise(noisy_vocal, noise, snr=snr, rng=np.random.default_rng())
 
+    if random.random() < config['encoded']["p_encoded"]:
+        noisy_vocal = simulate_and_align_random_codec(noisy_vocal,fs)
+
     # normalization
     scale = 1 / max(
         np.max(np.abs(noisy_vocal)),
@@ -391,8 +395,8 @@ def process_single_item(speech_path, noise_list, rir_list, config, dst_dir, sr):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate clean/noisy speech pairs for training.")
-    parser.add_argument("--json_config", type=str, default='')
-    parser.add_argument("--num_workers", type=int, default=8, help="Number of parallel worker threads.")
+    parser.add_argument("--json_config", type=str, default='config.json')
+    parser.add_argument("--num_workers", type=int, default=20, help="Number of parallel worker threads.")
     parser.add_argument("--sr", type=int, default=44100, help="Target sample rate for all audio.")
     
     args = parser.parse_args()

@@ -59,10 +59,11 @@ CODEC_CONFIG = [
     },
 ]
 
-def simulate_and_align_random_codec(wav: torch.Tensor, sr: int) -> torch.Tensor:
+def simulate_and_align_random_codec(wav, sr: int):
     """
     Selects a random codec, applies it, and aligns the result with the original.
     """
+    wav = torch.from_numpy(wav.copy())
     codec_choice = random.choice(CODEC_CONFIG)
     wav_processed = None
 
@@ -82,6 +83,7 @@ def simulate_and_align_random_codec(wav: torch.Tensor, sr: int) -> torch.Tensor:
     tau = match2(wav, wav_processed)
     wav_aligned = torch.roll(wav_processed, -tau[0], -1)
 
+    wav_aligned = wav_aligned.cpu().numpy()
     return wav_aligned
 
 def process_single_item(speech_path: str, dst: str, sr: int):

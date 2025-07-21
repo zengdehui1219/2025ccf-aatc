@@ -3,7 +3,7 @@
         "speech_scp": "./scp/speech.scp",
         "noise_scp": "./scp/noise.scp",
         "rir_scp": "./scp/rir.scp",
-        "dst_dir": "/data1/MODEL/baseline/output"
+        "dst_dir": "/data1/CCF2025/datasets_fullband/noisy_fullband"
     },
     "noise":{
         "p_noise": 0.9,
@@ -34,5 +34,10 @@
     },
     "freq_distortion":{
         "p_freq_distortion": 0.2
+    },
+    "encoded":{
+        "p_encoded": 0.2,
+        "backend": "ffmpeg",
+        "bitrates": [24000, 32000, 48000, 64000, 96000, 128000]
     }
 }
