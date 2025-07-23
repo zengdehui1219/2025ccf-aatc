@@ -319,14 +319,14 @@ def process_from_audio_path(
 
     if random.random() < config['bandwidth_limitation']["p_bandwidth_limitation"]:
         # print('add bandwidth limitation')
-        fs_new = random.choice(config['bandwidth_limitation']["bandwidth_limitation_rates"])
+        fs_new = random.choices(config['bandwidth_limitation']["bandwidth_limitation_rates"],weights=config['bandwidth_limitation']['bandwidth_limitation_rates_prob'])[0]
         res_type = random.choice(config['bandwidth_limitation']["bandwidth_limitation_methods"])
         noisy_vocal = bandwidth_limitation(noisy_vocal, fs=fs, fs_new=fs_new, res_type=res_type)
 
     # add noise
     if random.random() < config['noise']["p_noise"]:
         # print('add noise')
-        snr_strength = random.choices(['low','medium','high'], weights=config['noise']['snr_strength_prob'])
+        snr_strength = random.choices(['low','medium','high'], weights=config['noise']['snr_strength_prob'])[0]
         if snr_strength == 'low':
             snr = random.uniform(config['noise']["snr_min"],  5)
         elif snr_strength == 'medium':
@@ -396,7 +396,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate clean/noisy speech pairs for training.")
     parser.add_argument("--json_config", type=str, default='config.json')
-    parser.add_argument("--num_workers", type=int, default=20, help="Number of parallel worker threads.")
+    parser.add_argument("--num_workers", type=int, default=24, help="Number of parallel worker threads.")
     parser.add_argument("--sr", type=int, default=44100, help="Target sample rate for all audio.")
     
     args = parser.parse_args()

@@ -12,9 +12,9 @@ def create_scp(folder_paths, scp_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate speech/noise/rir for training.")
-    parser.add_argument("--speech_dir",default=[])
-    parser.add_argument("--noise_dir",default=[])
-    parser.add_argument("--rir_dir",default=[])
+    parser.add_argument("--speech_dir",default=['/data1/CCF2025/datasets_fullband/noisy_fullband/clean'])
+    parser.add_argument("--noise_dir",default=['/data2/noise/ESC-50-master/audio','/data1/CCF2025/datasets_fullband/noise_fullband'])
+    parser.add_argument("--rir_dir",default=['/data1/CCF2025/RIRS_NOISES/simulated_rirs','/data1/CCF2025/simulated_rirs_8k','/data1/CCF2025/simulated_rirs_16k'])
 
     args = parser.parse_args()
     

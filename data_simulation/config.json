@@ -3,7 +3,7 @@
         "speech_scp": "./scp/speech.scp",
         "noise_scp": "./scp/noise.scp",
         "rir_scp": "./scp/rir.scp",
-        "dst_dir": "/data1/CCF2025/datasets_fullband/noisy_fullband"
+        "dst_dir": "/data1/CCF2025/dataset"
     },
     "noise":{
         "p_noise": 0.9,
@@ -29,11 +29,12 @@
     },
     "bandwidth_limitation":{
         "p_bandwidth_limitation": 0.5,
-        "bandwidth_limitation_rates": [2000,4000, 8000, 16000, 24000, 32000],
+        "bandwidth_limitation_rates": [4000, 8000, 16000, 24000, 32000],
+        "bandwidth_limitation_rates_prob": [0.2, 0.1, 0.5, 0.2, 0.1],
         "bandwidth_limitation_methods": ["kaiser_best", "kaiser_fast", "scipy", "polyphase"]
     },
     "freq_distortion":{
-        "p_freq_distortion": 0.2
+        "p_freq_distortion": 0.3
     },
     "encoded":{
         "p_encoded": 0.2,
